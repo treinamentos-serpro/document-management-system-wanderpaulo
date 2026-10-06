@@ -1,20 +1,64 @@
-// Seed do componente raiz do Document Management System.
-//
-// Este é apenas um ponto de partida mínimo. Durante o Passo 3 você vai usar o
-// Agent Mode do GitHub Copilot para construir os componentes:
-//   - components/UploadComponent
-//   - components/DocumentList
-//   - components/DownloadButton
-// e o serviço services/ que consome a API do backend via fetch.
+import { useEffect, useState } from 'react';
+import { Files } from 'lucide-react';
+import UploadComponent from './components/UploadComponent.jsx';
+import DocumentList from './components/DocumentList.jsx';
+import { listDocuments, uploadDocument } from './services/documentApi.js';
+import './App.css';
 
 export default function App() {
+  const [documents, setDocuments] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isUploading, setIsUploading] = useState(false);
+  const [listError, setListError] = useState('');
+
+  async function loadDocuments(signal) {
+    setIsLoading(true);
+    setListError('');
+    try {
+      const result = await listDocuments(signal);
+      if (!signal?.aborted) setDocuments(result);
+    } catch (error) {
+      if (!signal?.aborted) setListError(error.message);
+    } finally {
+      if (!signal?.aborted) setIsLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    const controller = new AbortController();
+    loadDocuments(controller.signal);
+    return () => controller.abort();
+  }, []);
+
+  async function handleUpload(file) {
+    setIsUploading(true);
+    try {
+      const document = await uploadDocument(file);
+      setDocuments((current) => [document, ...current]);
+      return document;
+    } finally {
+      setIsUploading(false);
+    }
+  }
+
   return (
-    <main style={{ fontFamily: 'system-ui, sans-serif', padding: '2rem' }}>
-      <h1>Document Management System</h1>
-      <p>
-        Seed do frontend. Construa a interface durante o Passo 3 usando o Agent
-        Mode do GitHub Copilot.
-      </p>
-    </main>
+    <>
+      <header className="app-header">
+        <div className="header-content">
+          <span className="brand-icon"><Files size={25} aria-hidden="true" /></span>
+          <h1>Document Management System</h1>
+        </div>
+      </header>
+      <main className="workspace">
+        <UploadComponent onUpload={handleUpload} isUploading={isUploading} disabled={isLoading} />
+        <DocumentList
+          documents={documents}
+          isLoading={isLoading}
+          error={listError}
+          onRefresh={() => loadDocuments()}
+          refreshDisabled={isLoading || isUploading}
+        />
+      </main>
+    </>
   );
 }

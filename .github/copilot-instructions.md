@@ -48,9 +48,10 @@ Camadas internas não conhecem camadas externas.
 ## Armazenamento (restrição importante)
 
 - Os arquivos enviados são gravados no filesystem local da aplicação, na pasta
-  `backend/storage`, utilizando `multer` com `diskStorage`.
-- Os metadados dos documentos (id, nome original, tamanho, data, dono) ficam em
-  memória nesta fase inicial.
+  `backend/storage` por padrão, utilizando `multer` com `diskStorage`; o caminho
+  pode ser alterado pela variável `DMS_STORAGE_DIR`.
+- Os metadados dos documentos (`id`, `originalName`, `size`, `uploadedAt`,
+  `owner` e `mimeType`) ficam em memória nesta fase inicial.
 - Não utilize provedores de armazenamento externos ou serviços de upload de
   terceiros. O armazenamento é estritamente local à aplicação.
 
@@ -60,6 +61,8 @@ Camadas internas não conhecem camadas externas.
 - Organização baseada em componentes: `components/`, `pages/`, `services/`
 - A comunicação com o backend é feita via `fetch`, através do prefixo `/api`
   (proxy configurado no Vite)
+- O proxy do Vite aponta para o backend na porta `3000`; ao alterar `PORT`, ajuste
+  também `frontend/vite.config.js`.
 - Reutilize componentes e evite duplicação
 
 ## Estilo de código
